@@ -30,6 +30,17 @@ import org.bazinga.common.message.SubScribeInfo;
  * 2016-07-13 13:27:53.224 INFO  [main] [BenchmarkClient] - count=128000000
  * 2016-07-13 13:27:53.224 INFO  [main] [BenchmarkClient] - Request count: 128000000, time: 3024 second, qps: 42328
  * 
+ * 
+ * 代码优化：飞行记录: -XX:+UnlockCommercialFeatures -XX:+FlightRecorder
+ * 
+ * 飞行记录的结果是 
+ * 1)ConectionPreHeater中的TimeoutScannner 占据30%的CPU 优化直接去掉，感觉无需扫描，如果连接超时，调用的时候则会报错
+ * 2)DefaultResultGather 是模仿DefaultInvokePromise TimeoutScanner忘记"稍睡"0.03秒
+ * 
+ * 
+ * 2016-07-19 14:00:35.076 INFO  [main] [BenchmarkClient] - count=128000000
+ * 2016-07-19 14:00:35.076 INFO  [main] [BenchmarkClient] - Request count: 128000000, time: 1855 second, qps: 69002
+ * 
  */
 public class BenchmarkClient {
 

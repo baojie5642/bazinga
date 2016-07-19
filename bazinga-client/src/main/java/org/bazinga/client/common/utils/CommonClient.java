@@ -5,6 +5,8 @@ import static org.bazinga.common.utils.Constants.DEFAULT_TIMEOUT;
 import static org.bazinga.common.utils.Constants.NO_AVAILABLE_WRITEBUFFER_HIGHWATERMARK;
 import static org.bazinga.common.utils.Constants.NO_AVAILABLE_WRITEBUFFER_LOWWATERMARK;
 
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.bazinga.client.comsumer.DefaultConsumer;
 import org.bazinga.client.dispatcher.DefaultDispatcher;
 import org.bazinga.client.gather.DefaultResultGather;
@@ -26,7 +28,7 @@ import org.bazinga.common.message.SubScribeInfo;
  */
 public class CommonClient extends DefaultConsumer implements DefaultCommonClient {
 
-	private volatile boolean preHeatStatus = true;
+	private ConcurrentHashMap<String, Boolean> preHeatStatusMap = new ConcurrentHashMap<String, Boolean>();
 
 	public CommonClient(SubScribeInfo info) {
 		super(info, NO_AVAILABLE_WRITEBUFFER_HIGHWATERMARK, NO_AVAILABLE_WRITEBUFFER_LOWWATERMARK);
@@ -45,11 +47,11 @@ public class CommonClient extends DefaultConsumer implements DefaultCommonClient
 	public Object call(String serviceName, long timeout, Object... args) throws Throwable {
 
 		//查看该服务是否已经可用，第一次调用的时候，需要预热
-		if (preHeatStatus) {
+		if (!hasPreHeatStatus(serviceName)) {
 			// 第一次调用的时候，需要查看consumer link provider的channel is ready
 			ConectionPreHeater conectionPreHeater = new ConectionPreHeater(serviceName, timeout);
 			conectionPreHeater.getPreHeatReady();
-			preHeatStatus = false;
+			preHeatStatusMap.put(serviceName, Boolean.TRUE);
 		}
 
 		if (null == serviceName || serviceName.length() == 0) {
@@ -71,6 +73,18 @@ public class CommonClient extends DefaultConsumer implements DefaultCommonClient
 		DefaultResultGather defaultResultGather = new DefaultDispatcher().dispatcher(channelGroup.next(), request, timeout);
 
 		return defaultResultGather.getResult();
+	}
+
+	/**
+	 * 
+	 * @param serviceName
+	 * @return
+	 */
+	private boolean hasPreHeatStatus(String serviceName) {
+		
+		Boolean hasPreHeated = preHeatStatusMap.get(serviceName);
+		
+		return hasPreHeated == null ? false : hasPreHeated.booleanValue();
 	}
 
 	/**

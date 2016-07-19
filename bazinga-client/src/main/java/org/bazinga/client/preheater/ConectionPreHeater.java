@@ -13,7 +13,7 @@ import org.bazinga.common.logger.InternalLoggerFactory;
 import org.bazinga.common.utils.SystemClock;
 
 /**
- * 链接越热工具，模仿getresult时的promise的方式
+ * 链接预热工具，模仿getresult时的promise的方式
  * @author BazingaLyn
  * @copyright fjc
  * @time 2016年6月14日
@@ -99,32 +99,6 @@ public class ConectionPreHeater {
 
 	private boolean isDone() {
 		return readyState != null;
-	}
-
-	private static class TimeoutScanner implements Runnable {
-
-		public void run() {
-			for (;;) {
-				try {
-					for (ConectionPreHeater conectionPreHeater : preHeaterGather.values()) {
-						if (null == conectionPreHeater || conectionPreHeater.isDone()) {
-							continue;
-						}
-						if (SystemClock.millisClock().now() - conectionPreHeater.startTimestamp > conectionPreHeater.timeoutMillis) {
-							throw new ConnectFailedException("link time out");
-						}
-					}
-				} catch (Exception e) {
-				}
-			}
-		}
-
-	}
-
-	static {
-		Thread t = new Thread(new TimeoutScanner(), "timeout.scanner");
-		t.setDaemon(true);
-		t.start();
 	}
 
 }

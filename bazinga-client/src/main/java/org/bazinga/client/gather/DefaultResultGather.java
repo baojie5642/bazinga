@@ -145,6 +145,7 @@ public class DefaultResultGather {
                             processingTimeoutFuture(defaultResultGather);
                         }
 					}
+					Thread.sleep(30);
 				} catch (Exception e) {
 				}
 			}
